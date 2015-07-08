@@ -1,0 +1,179 @@
+<?php
+session_start();
+//require 'forums/plugins/jsconnect/functions.jsconnect.php' or die("error");
+echo "<!DOCTYPE HTML> 
+<html>
+<head>
+	<link rel= 'stylesheet' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
+  	<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js'></script>
+  	<script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+	<link href='css/style.css' rel='stylesheet'>
+	<script src='js/validateform.js'></script>
+</head>
+
+<body class='login'>";
+$server='localhost';
+$user='root';
+$passwd='ragasree';
+$db='test';
+$name = $email = $pass = '';
+$con=new PDO("mysql:host=$server;dbname=$db", $user, $passwd);
+$con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$stm = $con->prepare("SELECT * FROM newloginform WHERE 1");
+$stm->execute();
+$result=$stm->fetch();
+$count=count($result);
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST["userid"])) {
+$name=$_POST["userid"]; 
+$email=$_POST["email"];
+$conn0=new PDO("mysql:host=$server;dbname=$db", $user, $passwd);
+$conn0->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$stmt0 = $conn0->prepare("SELECT * FROM newloginform WHERE email = :email");
+$stmt0->bindParam(':email', $email);
+$stmt0->execute();
+$result = $stmt0->fetch();
+if (empty($result)) {
+try	{
+
+	$pass=md5($_POST["password"]);
+	$conn=new PDO("mysql:host=$server;dbname=$db", $user, $passwd);
+ 	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  	$stmt = $conn->prepare("INSERT INTO newloginform (Name,Email,password) 
+		VALUES (:name, :email,:pass)");
+    $stmt->bindParam(':name', $name);
+    $stmt->bindParam(':email', $email);
+    $stmt->bindParam(':pass', $pass); 
+	$stmt->execute();
+$count++;
+  $_SESSION["email"]=$email;
+  $_SESSION["password"]=$pwd;
+  $_SESSION["name"]=$name;
+  $_SESSION["id"]=$count;
+  header("Location: http://localhost/mithra/forums");}
+catch(PDOException $e)
+    {
+    echo 'Error: ' . $e->getMessage();
+    }
+}
+else{
+	echo "Email already Exists";
+}
+}
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['emailid'])) {
+$pwd = $email = $result = '';
+$pwd=md5($_POST['pass']);
+$conn1=new PDO("mysql:dbname=$db;host=$server", $user, $passwd);
+$conn1->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+if(preg_match("/[\.0-9a-zA-Z]{1,30}@[a-zA-Z0-9]+[\.a-zA-Z]+/i",$_POST['emailid']))
+{
+	$email=$_POST['emailid'];
+	$stmt = $conn1->prepare("SELECT * FROM newloginform WHERE Email = :email AND password = :pass");
+	$stmt->bindParam(':email', $email);
+	$stmt->bindParam(':pass', $pwd);
+	$stmt->execute();
+  $result = $stmt->fetch();
+}
+if(empty($result))
+{
+echo "No such user";
+}
+else
+{
+$_SESSION["email"]=$email;
+$_SESSION["password"]=$pwd;
+$_SESSION["name"]=$result["Name"];
+$_SESSION["id"]=$result["Id"];
+header("Location: http://localhost/mithra/forums");
+}
+}
+echo "<form name='loginform' class='vertical-form' id='loginform' action='".htmlspecialchars($_SERVER['PHP_SELF'])."' accept-charset='UTF-8' method='post' onsubmit='return validateForm()' autocomplete='off' >
+		<input name='utf8' type='hidden' value='✓'>
+		<input type='hidden' name='authenticity_token' value='FhG9PZ6iQYUR0dcDGtjIaM8A2CzibHtFp5yFAJRpvHbzyDGZzoSfiXySviXjCWYYHxEZQXS9N/tOKFErbj0zvw=='>
+		<div id='legend'>
+			Log In
+		</div>
+		<input placeholder='Email Address' label='false' type='text' value='' name='emailid' id='email' autocomplete='off'><div id='e_error'></div>
+		<input placeholder='Password' label='false' type='password' name='pass' id='password'  autocomplete='off'><div id='pass1_error'></div>
+		<input type='submit' name='commit' value='Log In'>
+		<p><a style='color:white' href='/forgot_password/new'>Forgot password?</a></p>
+	</form>
+<div class='footer'>
+<p>Don't have an account?
+<a href='#' data-toggle='modal' data-target='#myModal'>Sign Up</a>
+
+</p>
+</div>
+
+<div class='modal fade' id='myModal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel'>
+  <div class='modal-dialog' role='document'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+        <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+        <h2 class='modal-title'>Request Login</h2>
+			
+      </div>
+      <div class='modal-body'>
+        <div id='myTabContent' class='tab-content'>
+        <div class='tab-pane fade active in' id='signup'>
+            <form class='form-horizontal' name='newlogin' id='newlogin' method='post' autocomplete='off' onsubmit='return valnewlogin()'action='".htmlspecialchars($_SERVER['PHP_SELF'])."'>
+            <fieldset>
+  
+            
+            
+            <div class='control-group'>
+              <label class='control-label' for='userid'>Name</label>
+              <div class='controls'>
+                <input id='userid' name='userid' autocomplete='off' class='form-control' type='text' placeholder='Name' >
+              </div>
+              <div id='name_error'></div>
+            </div>
+
+           
+            <div class='control-group'>
+              <label class='control-label' for='Email'>Email:</label>
+              <div class='controls'>
+                <input id='Emailid' name='email' value='' autocomplete='off' class='form-control' type='text' placeholder='Email' >
+              </div>
+              <div id='email_error'></div>
+            </div>
+            
+            
+            <div class='control-group'>
+              <label class='control-label' for='password'>Password:</label>
+              <div class='controls'>
+                <input id='password' name='password' class='form-control' autocomplete='off' type='password' placeholder='********' >
+              </div>
+              <div id='pass_error'></div>
+            </div>
+            
+            
+            <div class='control-group'>
+              <label class='control-label' for='reenterpassword'>Re-Enter Password:</label>
+              <div class='controls'>
+                <input id='repassword' class='form-control' name='repassword' type='password' placeholder='********' >
+              </div>
+              <div id='re_pass_error'></div>
+            </div>
+
+            
+            <div class='control-group'>
+              <label class='control-label' for='confirmsignup'></label>
+              <div class='controls'>
+                <button id='confirmsignup' name='confirmsignup' class='btn btn-success'>Sign Up</button>
+              </div>
+            </div>
+            </fieldset>
+            </form>
+      </div>
+    </div>
+      </div>
+      <div class='modal-footer'>
+        <button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>";
+?>
